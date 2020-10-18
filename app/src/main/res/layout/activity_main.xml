@@ -11,4 +11,25 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <TextView
+        android:id="@+id/bearingTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="bearing"
+        android:textColor="#FFFFFF"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/locationTexView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="location"
+        android:textColor="#FFFFFF"
+        app:layout_constraintStart_toStartOf="@+id/bearingTextView"
+        app:layout_constraintTop_toBottomOf="@+id/bearingTextView" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,37 +3,121 @@ package com.threeal.smartvisitor
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Looper
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-        private const val REQUEST_CODE_PERMISSIONS = 10
-        private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+
+        private const val CAMERA_REQUEST_CODE_PERMISSIONS = 10
+        private val CAMERA_REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+
+        private const val LOCATION_REQUEST_CODE_PERMISSIONS = 0
+        private val LOCATION_REQUIRED_PERMISSIONS = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
     }
+
+    private lateinit var bearingTextView: TextView
+    private lateinit var locationTextView: TextView
+
+    private lateinit var fusedLocationProvider: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (allPermissionGranted()) {
+        fusedLocationProvider = LocationServices.getFusedLocationProviderClient(this)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                for (location in (locationResult ?: return).locations) {
+                    updateLocation(location)
+                }
+            }
+        }
+
+        bearingTextView = findViewById(R.id.bearingTextView)
+        locationTextView = findViewById(R.id.locationTexView)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (cameraPermissionsGranted()) {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+                this, CAMERA_REQUIRED_PERMISSIONS, CAMERA_REQUEST_CODE_PERMISSIONS
             )
+        }
+
+        if (locationPermissionsGranted()) {
+            startLocation()
+        } else {
+            ActivityCompat.requestPermissions(
+                this, LOCATION_REQUIRED_PERMISSIONS, LOCATION_REQUEST_CODE_PERMISSIONS
+            )
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        fusedLocationProvider.removeLocationUpdates(locationCallback)
+    }
+
+    private fun cameraPermissionsGranted() = CAMERA_REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private fun locationPermissionsGranted() = LOCATION_REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        when (requestCode) {
+            CAMERA_REQUEST_CODE_PERMISSIONS -> {
+                if (cameraPermissionsGranted()) {
+                    startCamera()
+                } else {
+                    Toast.makeText(
+                        this, "Camera permissions not granted by the user.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+            }
+
+            LOCATION_REQUEST_CODE_PERMISSIONS -> {
+                if (locationPermissionsGranted()) {
+                    startLocation()
+                } else {
+                    Toast.makeText(
+                        this, "Location permissions not granted by the user.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+            }
         }
     }
 
@@ -60,23 +144,29 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun allPermissionGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED;
+    @SuppressLint("MissingPermission")
+    private fun startLocation() {
+        fusedLocationProvider.lastLocation.addOnSuccessListener { location: Location? ->
+            updateLocation(location)
+        }
+
+        val locationRequest = LocationRequest.create()?.apply {
+            interval = 100
+            fastestInterval = 50
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+        fusedLocationProvider.requestLocationUpdates(
+            locationRequest, locationCallback, Looper.getMainLooper()
+        )
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionGranted()) {
-                startCamera()
-            } else {
-                Toast.makeText(
-                    this, "Permissions not granted by the user.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                finish()
-            }
-        }
+    @SuppressLint("SetTextI18n")
+    private fun updateLocation(location: Location?) {
+        location ?: return
+        locationTextView.setText(
+            "lat: ${location.latitude}\nlon: ${location.longitude}\n"
+                    + "alt: ${location.altitude}\ntime: ${location.time}"
+        )
     }
 }
