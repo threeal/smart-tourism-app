@@ -5,7 +5,13 @@ import android.os.Bundle
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.hardware.SensorManager.*
 import android.location.Location
+import android.opengl.Matrix
 import android.os.Looper
 import android.util.Log
 import android.widget.TextView
@@ -15,11 +21,12 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.rotationMatrix
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SensorEventListener {
 
     companion object {
         private const val TAG = "MainActivity"
@@ -40,9 +47,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
+    private lateinit var sensorManager: SensorManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        bearingTextView = findViewById(R.id.bearingTextView)
+        locationTextView = findViewById(R.id.locationTexView)
 
         fusedLocationProvider = LocationServices.getFusedLocationProviderClient(this)
         locationCallback = object : LocationCallback() {
@@ -53,8 +65,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        bearingTextView = findViewById(R.id.bearingTextView)
-        locationTextView = findViewById(R.id.locationTexView)
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
     }
 
     override fun onResume() {
@@ -75,6 +86,12 @@ class MainActivity : AppCompatActivity() {
                 this, LOCATION_REQUIRED_PERMISSIONS, LOCATION_REQUEST_CODE_PERMISSIONS
             )
         }
+
+        sensorManager.registerListener(
+            this,
+            sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+            SENSOR_DELAY_NORMAL
+        )
     }
 
     override fun onPause() {
@@ -163,10 +180,53 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun updateLocation(location: Location?) {
-        location ?: return
-        locationTextView.setText(
-            "lat: ${location.latitude}\nlon: ${location.longitude}\n"
-                    + "alt: ${location.altitude}\ntime: ${location.time}"
-        )
+        locationTextView.text = ("lat: ${location?.latitude}\nlon: ${location?.longitude}\n"
+                + "alt: ${location?.altitude}\ntime: ${location?.time}")
+    }
+
+    override fun onSensorChanged(sensorEvent: SensorEvent?) {
+        if (sensorEvent?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
+            val rotationMatrix = FloatArray(16)
+            getRotationMatrixFromVector(rotationMatrix, sensorEvent.values)
+
+            val projectionMatrix = FloatArray(16)
+
+            val ratio: Float = when {
+                cameraPreview.width < cameraPreview.height -> {
+                    cameraPreview.width.toFloat() / cameraPreview.height.toFloat()
+                }
+                else -> {
+                    cameraPreview.height.toFloat() / cameraPreview.width.toFloat()
+                }
+            }
+
+            Matrix.frustumM(
+                projectionMatrix, 0, -ratio, ratio,
+                -1f, 1f, 0.5f, 10000f
+            )
+
+            val rotatedProjectionMatrix = FloatArray(16)
+            Matrix.multiplyMM(
+                rotatedProjectionMatrix, 0, projectionMatrix, 0,
+                rotationMatrix, 0
+            )
+
+            val orientation = FloatArray(3)
+            getOrientation(rotatedProjectionMatrix, orientation)
+
+            var orientationDegree = DoubleArray(3)
+            orientation.forEachIndexed { index, element ->
+                orientationDegree[index] = Math.toDegrees(element.toDouble())
+            }
+
+            bearingTextView.text =
+                "${orientationDegree[0]}\n${orientationDegree[1]}\n${orientationDegree[2]}"
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        if (accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
+            Log.w(TAG, "Orientation compass unreliable")
+        }
     }
 }
