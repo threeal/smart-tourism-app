@@ -14,6 +14,8 @@ import android.location.Location
 import android.opengl.Matrix
 import android.os.Looper
 import android.util.Log
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
@@ -21,7 +23,6 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.rotationMatrix
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
@@ -49,6 +50,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
 
+    private lateinit var arOverlayView: ArOverlayView
+    private lateinit var overlayView: FrameLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -66,6 +70,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+
+        arOverlayView = ArOverlayView(this)
+        overlayView = findViewById(R.id.overlayView)
     }
 
     override fun onResume() {
@@ -92,6 +99,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
             SENSOR_DELAY_NORMAL
         )
+
+        if (arOverlayView.parent != null) {
+            (arOverlayView.parent as ViewGroup).removeView(arOverlayView)
+        }
+        overlayView.addView(arOverlayView)
     }
 
     override fun onPause() {
@@ -164,7 +176,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     @SuppressLint("MissingPermission")
     private fun startLocation() {
         fusedLocationProvider.lastLocation.addOnSuccessListener { location: Location? ->
-            updateLocation(location)
+            if (location != null) {
+                updateLocation(location)
+            }
         }
 
         val locationRequest = LocationRequest.create()?.apply {
@@ -179,9 +193,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun updateLocation(location: Location?) {
-        locationTextView.text = ("lat: ${location?.latitude}\nlon: ${location?.longitude}\n"
-                + "alt: ${location?.altitude}\ntime: ${location?.time}")
+    private fun updateLocation(location: Location) {
+        arOverlayView.updateCurrentLocation(location)
+        locationTextView.text = ("lat: ${location.latitude}\nlon: ${location.longitude}\n"
+                + "alt: ${location.altitude}\ntime: ${location.time}")
+
+
     }
 
     override fun onSensorChanged(sensorEvent: SensorEvent?) {
@@ -211,10 +228,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 rotationMatrix, 0
             )
 
+            arOverlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix)
+
             val orientation = FloatArray(3)
             getOrientation(rotatedProjectionMatrix, orientation)
 
-            var orientationDegree = DoubleArray(3)
+            val orientationDegree = DoubleArray(3)
             orientation.forEachIndexed { index, element ->
                 orientationDegree[index] = Math.toDegrees(element.toDouble())
             }
