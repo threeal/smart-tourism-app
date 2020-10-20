@@ -8,6 +8,10 @@ import android.graphics.Typeface
 import android.location.Location
 import android.opengl.Matrix
 import android.view.View
+import java.lang.Math.pow
+import kotlin.math.pow
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class ArOverlayView constructor(context: Context) : View(context) {
     private lateinit var rotatedProjectionMatrix: FloatArray
@@ -62,8 +66,25 @@ class ArOverlayView constructor(context: Context) : View(context) {
                 val y =
                     (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * height
 
-                canvas?.drawCircle(x, y, 30f, paint)
-                canvas?.drawText(it.name, x - (30 * it.name.length / 2), y - 80, paint)
+                var sum = 0.0;
+                for (i in 0..2) {
+                    sum += (pointInECEF[i] - currentLocationInECEF[i]).toDouble().pow(2.0);
+                }
+
+                val distance = sqrt(sum).roundToInt()
+                val distanceText = when {
+                    distance > 1000 -> {
+                        "${distance / 1000} KM"
+                    }
+                    else -> {
+                        "$distance M"
+                    }
+                }
+
+                val pointText = "${it.name} ($distanceText)"
+
+                canvas?.drawCircle(x, y, 20f, paint)
+                canvas?.drawText(pointText, x - (30 * pointText.length / 2), y - 80, paint)
             }
         }
     }
