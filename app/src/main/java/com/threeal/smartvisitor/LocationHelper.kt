@@ -21,9 +21,14 @@ class LocationHelper {
 
             val n = WGS84_A / sqrt(1.0 - WGS84_E2 * sLat * sLat)
 
-            val x = (n + location.altitude) * cLat * cLon
-            val y = (n + location.altitude) * cLat * sLon
-            val z = (n * (1.0 - WGS84_E2) + location.altitude) * sLat
+            // surpass altitude
+            // val x = (n + location.altitude) * cLat * cLon
+            // val y = (n + location.altitude) * cLat * sLon
+            // val z = (n * (1.0 - WGS84_E2) + location.altitude) * sLat
+
+            val x = n * cLat * cLon
+            val y = n * cLat * sLon
+            val z = n * (1.0 - WGS84_E2) * sLat
 
             return floatArrayOf(x.toFloat(), y.toFloat(), z.toFloat())
         }

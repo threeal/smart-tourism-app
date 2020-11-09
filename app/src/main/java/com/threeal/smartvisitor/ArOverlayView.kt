@@ -18,12 +18,11 @@ class ArOverlayView constructor(context: Context) : View(context) {
     private lateinit var currentLocation: Location
 
     private val arPoints = listOf<ArPoint>(
-        ArPoint("Musholla Al Ikhlas", -6.871587, 112.347071, 48.0),
-        ArPoint("Masjid Al Muttaqin", -6.872197, 112.349059, 48.0),
-        ArPoint("Omahku", -6.871759, 112.347909, 48.0),
-        ArPoint("Bengkel", -6.872025, 112.348004, 48.0),
-        ArPoint("Omah Sebelah", -6.871644, 112.347705, 48.0),
-        ArPoint("Omah Liyane", -6.871793, 112.348261, 48.0)
+        ArPoint("Taman", -6.869847, 112.347112, 0.0),
+        ArPoint("Masjid", -6.869712, 112.347698, 0.0),
+        ArPoint("Parkiran", -6.869839, 112.347405, 0.0),
+        ArPoint("Toko", -6.870136, 112.347188, 0.0),
+        ArPoint("Toko", -6.870163, 112.346959, 0.0)
     )
 
     fun updateRotatedProjectionMatrix(rotatedProjectionMatrix: FloatArray) {
