@@ -17,12 +17,12 @@ class ArOverlayView constructor(context: Context) : View(context) {
     private lateinit var rotatedProjectionMatrix: FloatArray
     private lateinit var currentLocation: Location
 
-    private val arPoints = listOf<ArPoint>(
-        ArPoint("Taman", -6.869847, 112.347112, 0.0),
-        ArPoint("Masjid", -6.869712, 112.347698, 0.0),
-        ArPoint("Parkiran", -6.869839, 112.347405, 0.0),
-        ArPoint("Toko", -6.870136, 112.347188, 0.0),
-        ArPoint("Toko", -6.870163, 112.346959, 0.0)
+    private val places = listOf<Place>(
+        Place("Taman", Place.Type.Garden, "", -6.869847, 112.347112, 0.0),
+        Place("Masjid", Place.Type.Restroom, "", -6.869712, 112.347698, 0.0),
+        Place("Parkiran", Place.Type.ParkingArea, "", -6.869839, 112.347405, 0.0),
+        Place("Toko", Place.Type.GiftShop, "", -6.870136, 112.347188, 0.0),
+        Place("Toko", Place.Type.GiftShop, "", -6.870163, 112.346959, 0.0)
     )
 
     fun updateRotatedProjectionMatrix(rotatedProjectionMatrix: FloatArray) {
@@ -47,7 +47,7 @@ class ArOverlayView constructor(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
-        arPoints.forEach {
+        places.forEach {
             val currentLocationInECEF = LocationHelper.WSG84toECF(currentLocation)
             val pointInECEF = LocationHelper.WSG84toECF(it.location)
             val pointInENU = LocationHelper.ECEFtoENU(
