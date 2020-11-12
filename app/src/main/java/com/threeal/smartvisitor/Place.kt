@@ -3,9 +3,9 @@ package com.threeal.smartvisitor
 import android.location.Location
 
 class Place constructor(
-    name: String,
-    type: Type,
-    description: String,
+    var name: String,
+    var type: Type,
+    var description: String,
     latitude: Double,
     longitude: Double,
     altitude: Double
@@ -20,11 +20,7 @@ class Place constructor(
         FoodCourt
     }
 
-    var name: String = name
-    var type: Type = type
-    var description: String = description
-
-    var location: Location = Location("SmartVisitor").apply {
+    var location: Location = Location("ArPoint").apply {
         this.latitude = latitude
         this.longitude = longitude
         this.altitude = altitude
