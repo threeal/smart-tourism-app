@@ -8,6 +8,8 @@ import android.graphics.Typeface
 import android.location.Location
 import android.opengl.Matrix
 import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import java.lang.Math.pow
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -51,7 +53,7 @@ class ArOverlayView constructor(context: Context) : View(context) {
                         (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * height,
                         sqrt(listOf(0, 1, 2).sumByDouble {
                             (pointInECEF[it] - currentLocationInECEF[it]).toDouble().pow(2.0)
-                        }).toFloat()
+                        })
                     )
                 )
             }
@@ -76,7 +78,7 @@ class ArOverlayView constructor(context: Context) : View(context) {
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.WHITE
+        color = Color.HSVToColor(64, floatArrayOf(0f, 0f, 0f))
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         textSize = 60f
     }
@@ -87,25 +89,48 @@ class ArOverlayView constructor(context: Context) : View(context) {
         super.onDraw(canvas)
 
         placePoints.forEach { placePoint ->
-            val distance = placePoint.z.roundToInt()
-            val distanceText = when {
-                distance > 1000 -> {
-                    "${distance / 1000} KM"
-                }
-                else -> {
-                    "$distance M"
-                }
-            }
+            canvas?.drawCircle(placePoint.x, placePoint.y, 48f, paint)
 
-            val pointText = "${placePoint.place.name} ($distanceText)"
-
-            canvas?.drawCircle(placePoint.x, placePoint.y, 20f, paint)
-            canvas?.drawText(
-                pointText,
-                placePoint.x - (30 * pointText.length / 2),
-                placePoint.y - 80,
-                paint
+            val icon = ResourcesCompat.getDrawable(
+                resources,
+                when (placePoint.place.type) {
+                    Place.Type.Information -> R.drawable.icon_information
+                    Place.Type.Garden -> R.drawable.icon_garden
+                    Place.Type.Rides -> R.drawable.icon_rides
+                    Place.Type.ParkingArea -> R.drawable.icon_parking_area
+                    Place.Type.Restroom -> R.drawable.icon_restroom
+                    Place.Type.GiftShop -> R.drawable.icon_gift_shop
+                    Place.Type.FoodCourt -> R.drawable.icon_food_court
+                },
+                null
             )
+
+            icon?.setBounds(
+                placePoint.x.roundToInt() - 32,
+                placePoint.y.roundToInt() - 32,
+                placePoint.x.roundToInt() + 32,
+                placePoint.y.roundToInt() + 32
+            )
+
+            icon?.draw(canvas!!)
+
+//            val distance = placePoint.distance.roundToInt()
+//            val distanceText = when {
+//                distance > 1000 -> {
+//                    "${distance / 1000} KM"
+//                }
+//                else -> {
+//                    "$distance M"
+//                }
+//            }
+//            val pointText = "${placePoint.place.name} ($distanceText)"
+//
+//            canvas?.drawText(
+//                pointText,
+//                placePoint.x - (30 * pointText.length / 2),
+//                placePoint.y - 80,
+//                paint
+//            )
         }
     }
 }

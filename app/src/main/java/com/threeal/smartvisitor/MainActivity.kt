@@ -195,10 +195,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     @SuppressLint("SetTextI18n")
     private fun updateLocation(location: Location) {
         arOverlayView.updateCurrentLocation(location)
-        locationTextView.text = ("lat: ${location.latitude}\nlon: ${location.longitude}\n"
-                + "alt: ${location.altitude}\ntime: ${location.time}")
-
-
+//        locationTextView.text = ("lat: ${location.latitude}\nlon: ${location.longitude}\n"
+//                + "alt: ${location.altitude}\ntime: ${location.time}")
+        locationTextView.text = ""
     }
 
     override fun onSensorChanged(sensorEvent: SensorEvent?) {
@@ -230,16 +229,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
             arOverlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix)
 
-            val orientation = FloatArray(3)
-            getOrientation(rotatedProjectionMatrix, orientation)
-
-            val orientationDegree = DoubleArray(3)
-            orientation.forEachIndexed { index, element ->
-                orientationDegree[index] = Math.toDegrees(element.toDouble())
-            }
-
-            bearingTextView.text =
-                "${orientationDegree[0]}\n${orientationDegree[1]}\n${orientationDegree[2]}"
+//            val orientation = FloatArray(3)
+//            getOrientation(rotatedProjectionMatrix, orientation)
+//
+//            val orientationDegree = DoubleArray(3)
+//            orientation.forEachIndexed { index, element ->
+//                orientationDegree[index] = Math.toDegrees(element.toDouble())
+//            }
+//
+//            bearingTextView.text =
+//                "${orientationDegree[0]}\n${orientationDegree[1]}\n${orientationDegree[2]}"
+            bearingTextView.text = ""
         }
     }
 
