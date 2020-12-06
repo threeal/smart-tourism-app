@@ -23,8 +23,15 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonArrayRequest
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.location.*
+import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.android.synthetic.main.activity_main.*
+import org.json.JSONObject
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
@@ -48,6 +55,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+
     private lateinit var sensorManager: SensorManager
 
     private lateinit var arOverlayView: ArOverlayView
@@ -68,6 +77,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
             }
         }
+
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 
@@ -104,6 +115,43 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             (arOverlayView.parent as ViewGroup).removeView(arOverlayView)
         }
         overlayView.addView(arOverlayView)
+
+        val queue = Volley.newRequestQueue(this)
+
+        val placesRequest =
+            JsonArrayRequest(Request.Method.GET, "http://192.168.43.87:8080/api/locations", null,
+                { placesJson ->
+                    val places = mutableListOf<Place>()
+
+                    for (i in 0 until placesJson.length()) {
+                        val placeJson = placesJson[i] as JSONObject
+                        Log.w(TAG, "got ${placeJson.getString("name")}")
+
+                        places.add(
+                            Place(
+                                placeJson.getString("name"),
+                                when (placeJson.getString("type")) {
+                                    "Information" -> Place.Type.Information
+                                    "Garden" -> Place.Type.Garden
+                                    "ParkingArea" -> Place.Type.ParkingArea
+                                    "Restroom" -> Place.Type.Restroom
+                                    "GiftShop" -> Place.Type.GiftShop
+                                    "FoodCourt" -> Place.Type.FoodCourt
+                                    else -> Place.Type.Information
+                                },
+                                "",
+                                placeJson.getDouble("longitude"),
+                                placeJson.getDouble("latitude"),
+                                0.0
+                            )
+                        )
+                    }
+
+                    arOverlayView.updatePlaces(places)
+                },
+                { Log.w(TAG, "error") })
+
+        queue.add(placesRequest)
     }
 
     override fun onPause() {
@@ -151,25 +199,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
         cameraProviderFuture.addListener(Runnable {
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
             val preview = Preview.Builder()
                 .build()
-                .also {
-                    it.setSurfaceProvider(cameraPreview.createSurfaceProvider())
-                }
 
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val cameraSelector = CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                .build()
 
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview)
-            } catch (exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
-            }
+            preview.setSurfaceProvider(cameraPreview.surfaceProvider)
+
+            cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, preview)
         }, ContextCompat.getMainExecutor(this))
     }
 

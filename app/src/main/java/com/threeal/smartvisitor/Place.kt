@@ -17,7 +17,7 @@ class Place constructor(
         ParkingArea,
         Restroom,
         GiftShop,
-        FoodCourt
+        FoodCourt,
     }
 
     var location: Location = Location("ArPoint").apply {
