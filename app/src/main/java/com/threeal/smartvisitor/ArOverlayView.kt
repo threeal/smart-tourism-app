@@ -1,4 +1,4 @@
-package com.threeal.smartvisitor
+package com.threeal.smarttourism
 
 import android.content.Context
 import android.graphics.Canvas

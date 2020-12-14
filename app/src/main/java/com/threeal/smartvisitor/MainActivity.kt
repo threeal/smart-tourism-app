@@ -1,4 +1,4 @@
-package com.threeal.smartvisitor
+package com.threeal.smarttourism
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

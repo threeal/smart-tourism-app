@@ -7,7 +7,7 @@ android {
     buildToolsVersion "30.0.2"
 
     defaultConfig {
-        applicationId "com.threeal.smartvisitor"
+        applicationId "com.threeal.smarttourism"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1
