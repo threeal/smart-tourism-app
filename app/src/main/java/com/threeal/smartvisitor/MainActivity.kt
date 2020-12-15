@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val queue = Volley.newRequestQueue(this)
 
         val placesRequest =
-            JsonArrayRequest(Request.Method.GET, "http://192.168.43.87:8080/api/locations", null,
+            JsonArrayRequest(Request.Method.GET, "http://192.168.100.199:8080/api/location", null,
                 { placesJson ->
                     val places = mutableListOf<Place>()
 
