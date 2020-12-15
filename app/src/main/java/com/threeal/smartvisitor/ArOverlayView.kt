@@ -7,9 +7,11 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.location.Location
 import android.opengl.Matrix
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import java.lang.Math.abs
 import java.lang.Math.pow
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -22,6 +24,27 @@ class ArOverlayView constructor(context: Context) : View(context) {
     private var places = listOf<Place>()
 
     private var placePoints = mutableListOf<PlacePoint>()
+    private var selectedPlace: Place? = null
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        val result = super.onTouchEvent(event)
+
+        when (event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+                selectedPlace = null
+                placePoints.forEach { placePoint ->
+                    val deltaX = kotlin.math.abs(placePoint.x - event.x)
+                    val deltaY = kotlin.math.abs(placePoint.y - event.y)
+
+                    if (deltaX <= 48f && deltaY <= 48f) {
+                        selectedPlace = placePoint.place
+                    }
+                }
+            }
+        }
+
+        return result
+    }
 
     private fun updatePlacePoints(currentLocation: Location, rotatedProjectionMatrix: FloatArray) {
         placePoints.clear()
@@ -88,7 +111,13 @@ class ArOverlayView constructor(context: Context) : View(context) {
         super.onDraw(canvas)
 
         placePoints.forEach { placePoint ->
-            canvas?.drawCircle(placePoint.x, placePoint.y, 48f, paint)
+            canvas?.drawCircle(
+                placePoint.x,
+                placePoint.y,
+                if (placePoint.place == selectedPlace) 72f
+                else 48f,
+                paint
+            )
 
             val icon = ResourcesCompat.getDrawable(
                 resources,
@@ -104,32 +133,33 @@ class ArOverlayView constructor(context: Context) : View(context) {
                 null
             )
 
+            val iconSize = if (placePoint.place == selectedPlace) 48 else 32
             icon?.setBounds(
-                placePoint.x.roundToInt() - 32,
-                placePoint.y.roundToInt() - 32,
-                placePoint.x.roundToInt() + 32,
-                placePoint.y.roundToInt() + 32
+                placePoint.x.roundToInt() - iconSize,
+                placePoint.y.roundToInt() - iconSize,
+                placePoint.x.roundToInt() + iconSize,
+                placePoint.y.roundToInt() + iconSize
             )
 
             icon?.draw(canvas!!)
 
-            val distance = placePoint.distance.roundToInt()
-            val distanceText = when {
-                distance > 1000 -> {
-                    "${distance / 1000} KM"
-                }
-                else -> {
-                    "$distance M"
-                }
-            }
-            val pointText = "${placePoint.place.name} ($distanceText)"
-
-            canvas?.drawText(
-                pointText,
-                placePoint.x - (30 * pointText.length / 2),
-                placePoint.y - 80,
-                paint
-            )
+//            val distance = placePoint.distance.roundToInt()
+//            val distanceText = when {
+//                distance > 1000 -> {
+//                    "${distance / 1000} KM"
+//                }
+//                else -> {
+//                    "$distance M"
+//                }
+//            }
+//            val pointText = "${placePoint.place.name} ($distanceText)"
+//
+//            canvas?.drawText(
+//                pointText,
+//                placePoint.x - (30 * pointText.length / 2),
+//                placePoint.y - 80,
+//                paint
+//            )
         }
     }
 }
