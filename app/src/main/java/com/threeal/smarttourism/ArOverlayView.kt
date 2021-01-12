@@ -9,10 +9,7 @@ import android.location.Location
 import android.opengl.Matrix
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import java.lang.Math.abs
-import java.lang.Math.pow
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -26,12 +23,10 @@ class ArOverlayView constructor(context: Context) : View(context) {
     private var placePoints = mutableListOf<PlacePoint>()
     private var selectedPlace: Place? = null
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        val result = super.onTouchEvent(event)
-
-        when (event?.action) {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                selectedPlace = null
+                performClick()
                 placePoints.forEach { placePoint ->
                     val deltaX = kotlin.math.abs(placePoint.x - event.x)
                     val deltaY = kotlin.math.abs(placePoint.y - event.y)
@@ -43,7 +38,12 @@ class ArOverlayView constructor(context: Context) : View(context) {
             }
         }
 
-        return result
+        return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        selectedPlace = null
+        return super.performClick()
     }
 
     private fun updatePlacePoints(currentLocation: Location, rotatedProjectionMatrix: FloatArray) {

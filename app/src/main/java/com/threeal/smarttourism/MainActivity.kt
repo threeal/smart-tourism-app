@@ -118,9 +118,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val queue = Volley.newRequestQueue(this)
 
+        Toast.makeText(this, R.string.text_fetching_data, Toast.LENGTH_SHORT).show()
         val placesRequest =
-            JsonArrayRequest(Request.Method.GET, "http://192.168.5.108:8080/api/location", null,
+            JsonArrayRequest(Request.Method.GET, getString(R.string.server_address), null,
                 { placesJson ->
+                    Toast.makeText(this, R.string.text_fetching_data_success, Toast.LENGTH_SHORT)
+                        .show()
+
                     val places = mutableListOf<Place>()
 
                     for (i in 0 until placesJson.length()) {
@@ -150,7 +154,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
                     arOverlayView.updatePlaces(places)
                 },
-                { Log.w(TAG, "error") })
+                { error ->
+                    Toast.makeText(
+                        this,
+                        R.string.text_fetching_data_failed,
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    Log.w(TAG, error)
+                })
 
         queue.add(placesRequest)
     }
