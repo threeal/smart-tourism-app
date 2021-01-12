@@ -12,12 +12,14 @@ class Place constructor(
 ) {
     enum class Type {
         Information,
+        Gallery,
         Garden,
         Rides,
         ParkingArea,
         Restroom,
         GiftShop,
         FoodCourt,
+        Unknown,
     }
 
     var location: Location = Location("ArPoint").apply {

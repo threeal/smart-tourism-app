@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val queue = Volley.newRequestQueue(this)
 
         val placesRequest =
-            JsonArrayRequest(Request.Method.GET, "http://192.168.100.199:8080/api/location", null,
+            JsonArrayRequest(Request.Method.GET, "http://192.168.5.108:8080/api/location", null,
                 { placesJson ->
                     val places = mutableListOf<Place>()
 
@@ -131,13 +131,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             Place(
                                 placeJson.getString("name"),
                                 when (placeJson.getString("type")) {
-                                    "Information" -> Place.Type.Information
-                                    "Garden" -> Place.Type.Garden
-                                    "ParkingArea" -> Place.Type.ParkingArea
-                                    "Restroom" -> Place.Type.Restroom
-                                    "GiftShop" -> Place.Type.GiftShop
-                                    "FoodCourt" -> Place.Type.FoodCourt
-                                    else -> Place.Type.Information
+                                    "information" -> Place.Type.Information
+                                    "gallery" -> Place.Type.Gallery
+                                    "garden" -> Place.Type.Garden
+                                    "parking_area" -> Place.Type.ParkingArea
+                                    "restroom" -> Place.Type.Restroom
+                                    "gift_shop" -> Place.Type.GiftShop
+                                    "food_court" -> Place.Type.FoodCourt
+                                    else -> Place.Type.Unknown
                                 },
                                 "",
                                 placeJson.getDouble("longitude"),

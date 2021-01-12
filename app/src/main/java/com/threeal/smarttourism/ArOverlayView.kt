@@ -123,12 +123,14 @@ class ArOverlayView constructor(context: Context) : View(context) {
                 resources,
                 when (placePoint.place.type) {
                     Place.Type.Information -> R.drawable.icon_information
+                    Place.Type.Gallery -> R.drawable.icon_information
                     Place.Type.Garden -> R.drawable.icon_garden
                     Place.Type.Rides -> R.drawable.icon_rides
                     Place.Type.ParkingArea -> R.drawable.icon_parking_area
                     Place.Type.Restroom -> R.drawable.icon_restroom
                     Place.Type.GiftShop -> R.drawable.icon_gift_shop
                     Place.Type.FoodCourt -> R.drawable.icon_food_court
+                    Place.Type.Unknown -> R.drawable.icon_information
                 },
                 null
             )
