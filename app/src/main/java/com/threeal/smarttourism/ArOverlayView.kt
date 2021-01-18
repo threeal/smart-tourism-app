@@ -1,38 +1,99 @@
 package com.threeal.smarttourism
 
-import android.content.Context
+import android.app.Activity
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Typeface
 import android.location.Location
-import android.opengl.Matrix
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.content.res.ResourcesCompat
-import kotlin.math.pow
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
+import android.view.ViewGroup
+import android.widget.FrameLayout
 
-class ArOverlayView constructor(context: Context) : View(context) {
-    private var rotatedProjectionMatrix: FloatArray? = null
+class ArOverlayView constructor(private val activity: Activity) :
+    View(activity) {
+
+    private val frameLayout: FrameLayout = activity.findViewById(R.id.arFrameLayout)
+
+    private var projectionMatrix: ProjectionMatrix? = null
     private var currentLocation: Location? = null
 
     private var places = listOf<Place>()
+    private var placeENUs = listOf<PlaceENU>()
+    private var placePoints = listOf<PlacePoint>()
 
-    private var placePoints = mutableListOf<PlacePoint>()
-    private var selectedPlace: Place? = null
+    private var selectedPlaceId: String? = null
+
+    private val locationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            currentLocation = location
+            processPlaceENUs()
+        }
+    }
+
+    private val placeListener = object : PlaceListener {
+        override fun onPlacesChanged(places: List<Place>) {
+            this@ArOverlayView.places = places
+            processPlaceENUs()
+        }
+    }
+
+    private val rotationListener = object : RotationListener {
+        override fun onRotationVectorChanged(rotationVector: FloatArray) {
+            projectionMatrix = ProjectionMatrix.fromRotationVectorAndLayout(
+                rotationVector, width.toFloat(), height.toFloat()
+            )
+
+            processPlacePoints()
+        }
+    }
+
+    private fun processPlaceENUs() {
+        currentLocation?.let { currentLocation ->
+            val currentECEF = ECEFCoordinate.fromLocation(currentLocation)
+
+            val newPlaceENUs = mutableListOf<PlaceENU>()
+            places.forEach {
+                newPlaceENUs.add(PlaceENU.fromCurrentECEFToPlace(currentECEF, it))
+            }
+
+            placeENUs = newPlaceENUs.toList()
+            processPlacePoints()
+        }
+    }
+
+    private fun processPlacePoints() {
+        projectionMatrix?.let { projectionMatrix ->
+            val newPlacePoints = mutableListOf<PlacePoint>()
+            placeENUs.forEach {
+                val placePoint = PlacePoint.fromProjectionOfPlaceEnu(projectionMatrix, it)
+                newPlacePoints.add(placePoint)
+            }
+
+            placePoints = newPlacePoints
+            invalidate()
+        }
+    }
+
+    fun start() {
+        LocationListener.register(locationListener)
+        PlaceListener.register(placeListener)
+        RotationListener.register(rotationListener)
+
+        Place.fetchPlaces(activity)
+
+        if (parent != null) {
+            val viewGroup = parent as ViewGroup
+            viewGroup.removeView(this)
+        }
+        frameLayout.addView(this)
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 performClick()
-                placePoints.forEach { placePoint ->
-                    val deltaX = kotlin.math.abs(placePoint.x - event.x)
-                    val deltaY = kotlin.math.abs(placePoint.y - event.y)
-
-                    if (deltaX <= 48f && deltaY <= 48f) {
-                        selectedPlace = placePoint.place
+                placePoints.forEach {
+                    if (it.touching(event.x, event.y, it.place.id == selectedPlaceId)) {
+                        selectedPlaceId = it.place.id
                     }
                 }
             }
@@ -42,126 +103,17 @@ class ArOverlayView constructor(context: Context) : View(context) {
     }
 
     override fun performClick(): Boolean {
-        selectedPlace = null
+        selectedPlaceId = null
         return super.performClick()
     }
-
-    private fun updatePlacePoints(currentLocation: Location, rotatedProjectionMatrix: FloatArray) {
-        placePoints.clear()
-
-        val currentLocationInECEF = LocationHelper.WSG84toECF(currentLocation)
-
-        places.forEach { place ->
-            val pointInECEF = LocationHelper.WSG84toECF(place.location)
-            val pointInENU = LocationHelper.ECEFtoENU(
-                currentLocation, currentLocationInECEF, pointInECEF
-            )
-
-            Matrix.multiplyMV(
-                cameraCoordinateVector, 0, rotatedProjectionMatrix, 0,
-                pointInENU, 0
-            )
-
-            if (cameraCoordinateVector[2] < 0) {
-                placePoints.add(
-                    PlacePoint(
-                        place,
-                        (0.5f + cameraCoordinateVector[0] / cameraCoordinateVector[3]) * width,
-                        (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * height,
-                        sqrt(listOf(0, 1, 2).sumByDouble {
-                            (pointInECEF[it] - currentLocationInECEF[it]).toDouble().pow(2.0)
-                        })
-                    )
-                )
-            }
-        }
-    }
-
-    fun updatePlaces(places: List<Place>) {
-        this.places = places
-        invalidate()
-    }
-
-    fun updateRotatedProjectionMatrix(rotatedProjectionMatrix: FloatArray) {
-        this.rotatedProjectionMatrix = rotatedProjectionMatrix
-        if (this.currentLocation != null) {
-            updatePlacePoints(this.currentLocation!!, this.rotatedProjectionMatrix!!)
-        }
-        invalidate()
-    }
-
-    fun updateCurrentLocation(currentLocation: Location) {
-        this.currentLocation = currentLocation
-        if (this.rotatedProjectionMatrix != null) {
-            updatePlacePoints(this.currentLocation!!, this.rotatedProjectionMatrix!!)
-        }
-        invalidate()
-    }
-
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.FILL
-        color = Color.HSVToColor(64, floatArrayOf(0f, 0f, 0f))
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        textSize = 60f
-    }
-
-    private val cameraCoordinateVector = FloatArray(4)
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
-        placePoints.forEach { placePoint ->
-            canvas?.drawCircle(
-                placePoint.x,
-                placePoint.y,
-                if (placePoint.place == selectedPlace) 72f
-                else 48f,
-                paint
-            )
-
-            val icon = ResourcesCompat.getDrawable(
-                resources,
-                when (placePoint.place.type) {
-                    Place.Type.Information -> R.drawable.icon_information
-                    Place.Type.Gallery -> R.drawable.icon_information
-                    Place.Type.Garden -> R.drawable.icon_garden
-                    Place.Type.Rides -> R.drawable.icon_rides
-                    Place.Type.ParkingArea -> R.drawable.icon_parking_area
-                    Place.Type.Restroom -> R.drawable.icon_restroom
-                    Place.Type.GiftShop -> R.drawable.icon_gift_shop
-                    Place.Type.FoodCourt -> R.drawable.icon_food_court
-                    Place.Type.Unknown -> R.drawable.icon_information
-                },
-                null
-            )
-
-            val iconSize = if (placePoint.place == selectedPlace) 48 else 32
-            icon?.setBounds(
-                placePoint.x.roundToInt() - iconSize,
-                placePoint.y.roundToInt() - iconSize,
-                placePoint.x.roundToInt() + iconSize,
-                placePoint.y.roundToInt() + iconSize
-            )
-
-            icon?.draw(canvas!!)
-
-//            val distance = placePoint.distance.roundToInt()
-//            val distanceText = when {
-//                distance > 1000 -> {
-//                    "${distance / 1000} KM"
-//                }
-//                else -> {
-//                    "$distance M"
-//                }
-//            }
-//            val pointText = "${placePoint.place.name} ($distanceText)"
-//
-//            canvas?.drawText(
-//                pointText,
-//                placePoint.x - (30 * pointText.length / 2),
-//                placePoint.y - 80,
-//                paint
-//            )
+        canvas?.let {
+            placePoints.forEach { placePoint ->
+                placePoint.draw(context, it, placePoint.place.id == selectedPlaceId)
+            }
         }
     }
 }
