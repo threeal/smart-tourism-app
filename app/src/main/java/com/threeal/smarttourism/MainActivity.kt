@@ -49,8 +49,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         )
     }
 
-    private lateinit var bearingTextView: TextView
-    private lateinit var locationTextView: TextView
+//    private lateinit var bearingTextView: TextView
+//    private lateinit var locationTextView: TextView
 
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
@@ -66,8 +66,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        bearingTextView = findViewById(R.id.bearingTextView)
-        locationTextView = findViewById(R.id.locationTexView)
+//        bearingTextView = findViewById(R.id.bearingTextView)
+//        locationTextView = findViewById(R.id.locationTexView)
 
         fusedLocationProvider = LocationServices.getFusedLocationProviderClient(this)
         locationCallback = object : LocationCallback() {
@@ -252,7 +252,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         arOverlayView.updateCurrentLocation(location)
 //        locationTextView.text = ("lat: ${location.latitude}\nlon: ${location.longitude}\n"
 //                + "alt: ${location.altitude}\ntime: ${location.time}")
-        locationTextView.text = ""
     }
 
     override fun onSensorChanged(sensorEvent: SensorEvent?) {
@@ -294,7 +293,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 //
 //            bearingTextView.text =
 //                "${orientationDegree[0]}\n${orientationDegree[1]}\n${orientationDegree[2]}"
-            bearingTextView.text = ""
         }
     }
 

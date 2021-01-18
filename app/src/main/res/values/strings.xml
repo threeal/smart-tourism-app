@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Smart Tourism</string>
+    <string name="icon_back_description">Kembali</string>
     <string name="server_address">http://192.168.5.108:8080/api/location</string>
     <string name="text_fetching_data">Mengambil data lokasi…</string>
     <string name="text_fetching_data_success">Berhasil mengambil data lokasi</string>
