@@ -11,7 +11,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 
-interface LocationListener {
+fun interface LocationListener {
     companion object {
         private val locationListeners = mutableListOf<LocationListener>()
 
@@ -19,6 +19,10 @@ interface LocationListener {
             if (locationListeners.all { it != locationListener }) {
                 locationListeners.add(locationListener)
             }
+        }
+
+        fun unregister(locationListener: LocationListener) {
+            locationListeners.remove(locationListener)
         }
 
         fun trigger(location: Location) {

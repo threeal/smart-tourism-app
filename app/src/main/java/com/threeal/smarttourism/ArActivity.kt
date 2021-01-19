@@ -3,10 +3,13 @@ package com.threeal.smarttourism
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.content.pm.PackageManager
+import android.view.View
+import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.app.ActivityCompat
 
-class MainActivity : AppCompatActivity() {
+class ArActivity : AppCompatActivity() {
 
     private var arOverlayView: ArOverlayView? = null
 
@@ -15,33 +18,41 @@ class MainActivity : AppCompatActivity() {
     private var rotationHandler: RotationHandler? = null
     private var refreshHandler: RefreshHandler? = null
 
+    private var backButton: AppCompatImageButton? = null
+
+    private val backOnClickListener = View.OnClickListener { finish() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ar)
 
         arOverlayView = ArOverlayView(this)
-
         cameraHandler = CameraHandler(this)
         locationHandler = LocationHandler(this)
         rotationHandler = RotationHandler(this)
         refreshHandler = RefreshHandler(this)
+
+        backButton = findViewById(R.id.backButton)
     }
 
     override fun onResume() {
         super.onResume()
 
         arOverlayView?.start()
-
         cameraHandler?.start()
         locationHandler?.start()
         rotationHandler?.start()
         refreshHandler?.start()
+
+        backButton?.setOnClickListener(backOnClickListener)
     }
 
     override fun onPause() {
         super.onPause()
 
+        arOverlayView?.stop()
         locationHandler?.stop()
+        refreshHandler?.stop()
     }
 
 
@@ -59,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                     cameraHandler?.start()
                 } else {
                     Toast.makeText(
-                        this, getString(R.string.text_camera_permission_not_granted),
+                        this, getString(R.string.camera_permission_not_granted),
                         Toast.LENGTH_SHORT
                     ).show()
                     finish()
@@ -71,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                     locationHandler?.start()
                 } else {
                     Toast.makeText(
-                        this, getString(R.string.text_location_permission_not_granted),
+                        this, getString(R.string.location_permission_not_granted),
                         Toast.LENGTH_SHORT
                     ).show()
                     finish()

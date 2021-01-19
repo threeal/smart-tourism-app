@@ -1,16 +1,20 @@
 <resources>
     <string name="app_name">Smart Tourism</string>
     <string name="icon_back_description">Kembali</string>
-    <string name="server_address">http://192.168.5.108:8080/api/app/location/AB567CDE</string>
-    <string name="text_fetching_data">Mengambil data lokasi…</string>
-    <string name="text_fetching_data_success">Berhasil mengambil data lokasi</string>
-    <string name="text_fetching_data_failed">Gagal mengambil data lokasi</string>
-    <string name="text_distance_info_not_found">Jarak tidak diketahui</string>
-    <string name="text_distance_info_m">Jarak %d M</string>
-    <string name="text_distance_info_km">Jarak %d KM</string>
-    <string name="text_visitation_info_not_visited">Belum pernah dikunjungi</string>
-    <string name="text_visitation_info">Dikunjungi pada %s</string>
-    <string name="text_location_info">%s, %s</string>
-    <string name="text_camera_permission_not_granted">Ijin akses kamera tidak diberikan</string>
-    <string name="text_location_permission_not_granted">Ijin akses lokasi tidak diberikan</string>
+    <string name="server_address">http://192.168.5.108:8080/api/app/location/%s</string>
+    <string name="fetching_data">Mengambil data lokasi…</string>
+    <string name="fetching_data_success">Berhasil mengambil data lokasi</string>
+    <string name="fetching_data_failed">Gagal mengambil data lokasi</string>
+    <string name="distance_info_not_found">Jarak tidak diketahui</string>
+    <string name="distance_info_m">Jarak %d M</string>
+    <string name="distance_info_km">Jarak %d KM</string>
+    <string name="visitation_info_not_visited">Belum pernah dikunjungi</string>
+    <string name="visitation_info">Dikunjungi pada %s</string>
+    <string name="location_info">%s, %s</string>
+    <string name="camera_permission_not_granted">Ijin akses kamera tidak diberikan</string>
+    <string name="location_permission_not_granted">Ijin akses lokasi tidak diberikan</string>
+    <string name="login">Masuk</string>
+    <string name="login_trying">Mencoba masuk…</string>
+    <string name="tag_id_hint">Id kartu</string>
+    <string name="tag_id_invalid">Id kartu tidak valid</string>
 </resources>

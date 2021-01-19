@@ -11,7 +11,7 @@ import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-interface PlaceListener {
+fun interface PlaceListener {
     companion object {
         private val placeListeners = mutableListOf<PlaceListener>()
 
@@ -19,6 +19,10 @@ interface PlaceListener {
             if (placeListeners.all { it != placeListener }) {
                 placeListeners.add(placeListener)
             }
+        }
+
+        fun unregister(placeListener: PlaceListener) {
+            placeListeners.remove(placeListener)
         }
 
         fun trigger(places: List<Place>?) {
@@ -52,19 +56,26 @@ class Place private constructor(
     }
 
     companion object {
-        fun fetchPlaces(context: Context) {
+        fun fetchPlaces(context: Context, tagId: String, silent: Boolean = false) {
             val queue = Volley.newRequestQueue(context)
 
-            Toast.makeText(context, R.string.text_fetching_data, Toast.LENGTH_SHORT).show()
+            if (!silent) {
+                Toast.makeText(context, R.string.fetching_data, Toast.LENGTH_SHORT).show()
+            }
+
             val placesRequest =
                 JsonArrayRequest(
-                    Request.Method.GET, context.getString(R.string.server_address), null,
+                    Request.Method.GET,
+                    context.getString(R.string.server_address).format(tagId),
+                    null,
                     { jsonArray ->
-                        Toast.makeText(
-                            context,
-                            R.string.text_fetching_data_success,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        if (!silent) {
+                            Toast.makeText(
+                                context,
+                                R.string.fetching_data_success,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
 
                         val places = mutableListOf<Place>()
                         for (i in 0 until jsonArray.length()) {
@@ -76,11 +87,13 @@ class Place private constructor(
                         PlaceListener.trigger(places)
                     },
                     {
-                        Toast.makeText(
-                            context,
-                            R.string.text_fetching_data_failed,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        if (!silent) {
+                            Toast.makeText(
+                                context,
+                                R.string.fetching_data_failed,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
 
                         PlaceListener.trigger(null)
                     })

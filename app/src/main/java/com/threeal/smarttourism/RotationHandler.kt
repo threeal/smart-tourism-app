@@ -7,7 +7,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 
-interface RotationListener {
+fun interface RotationListener {
     companion object {
         private val rotationListeners = mutableListOf<RotationListener>()
 
@@ -15,6 +15,10 @@ interface RotationListener {
             if (rotationListeners.all { it != rotationListener }) {
                 rotationListeners.add(rotationListener)
             }
+        }
+
+        fun unregister(rotationListener: RotationListener) {
+            rotationListeners.remove(rotationListener)
         }
 
         fun trigger(rotationVector: FloatArray) {

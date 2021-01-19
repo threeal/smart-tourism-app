@@ -7,18 +7,22 @@ class RefreshHandler constructor(private val activity: Activity) {
     private val swipeRefresh: SwipeRefreshLayout = activity.findViewById(R.id.swipeRefresh)
 
     private val swipeRefreshListener = SwipeRefreshLayout.OnRefreshListener {
-        Place.fetchPlaces(activity)
-        swipeRefresh.isRefreshing = true
-    }
+        val tagId = activity.intent.getStringExtra("com.threeal.smarttourism.TAG_ID")
 
-    private val placeListener = object : PlaceListener {
-        override fun onPlacesChanged(places: List<Place>?) {
-            swipeRefresh.isRefreshing = false
+        tagId?.let {
+            Place.fetchPlaces(activity, it)
+            swipeRefresh.isRefreshing = true
         }
     }
+
+    private val placeListener = PlaceListener { swipeRefresh.isRefreshing = false }
 
     fun start() {
         swipeRefresh.setOnRefreshListener(swipeRefreshListener)
         PlaceListener.register(placeListener)
+    }
+
+    fun stop() {
+        PlaceListener.unregister(placeListener)
     }
 }

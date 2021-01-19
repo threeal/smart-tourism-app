@@ -11,8 +11,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.text.parseAsHtml
-import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 
 class ArOverlayView constructor(private val activity: Activity) :
@@ -34,30 +32,24 @@ class ArOverlayView constructor(private val activity: Activity) :
 
     private var selectedPlaceId: String? = null
 
-    private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location) {
-            currentECEF = ECEFCoordinate.fromLocation(location)
+    private val locationListener = LocationListener { location ->
+        currentECEF = ECEFCoordinate.fromLocation(location)
+        processPlaceENUs()
+    }
+
+    private val placeListener = PlaceListener { places ->
+        places?.let { safePlaces ->
+            this@ArOverlayView.places = safePlaces
             processPlaceENUs()
         }
     }
 
-    private val placeListener = object : PlaceListener {
-        override fun onPlacesChanged(places: List<Place>?) {
-            places?.let { safePlaces ->
-                this@ArOverlayView.places = safePlaces
-                processPlaceENUs()
-            }
-        }
-    }
+    private val rotationListener = RotationListener { rotationVector ->
+        projectionMatrix = ProjectionMatrix.fromRotationVectorAndLayout(
+            rotationVector, width.toFloat(), height.toFloat()
+        )
 
-    private val rotationListener = object : RotationListener {
-        override fun onRotationVectorChanged(rotationVector: FloatArray) {
-            projectionMatrix = ProjectionMatrix.fromRotationVectorAndLayout(
-                rotationVector, width.toFloat(), height.toFloat()
-            )
-
-            processPlacePoints()
-        }
+        processPlacePoints()
     }
 
     private val onTouchListener = OnTouchListener { _, event ->
@@ -131,24 +123,24 @@ class ArOverlayView constructor(private val activity: Activity) :
             placePoint?.let { safePlacePoint ->
                 locationTitle.text = safePlacePoint.place.name
 
-                var distanceText = activity.getString(R.string.text_distance_info_not_found)
+                var distanceText = activity.getString(R.string.distance_info_not_found)
                 currentECEF?.let {
                     val distance = it.distanceTo(safePlacePoint.enu.ecef)
                     distanceText = if (distance < 1000) {
-                        activity.getString(R.string.text_distance_info_m).format(distance.toInt())
+                        activity.getString(R.string.distance_info_m).format(distance.toInt())
                     } else {
-                        activity.getString(R.string.text_distance_info_km)
+                        activity.getString(R.string.distance_info_km)
                             .format(distance.toInt() / 1000)
                     }
                 }
 
-                var visitedText = activity.getString(R.string.text_visitation_info_not_visited)
+                var visitedText = activity.getString(R.string.visitation_info_not_visited)
                 safePlacePoint.place.timestamp?.let {
-                    visitedText = activity.getString(R.string.text_visitation_info)
+                    visitedText = activity.getString(R.string.visitation_info)
                         .format(it.format(DateTimeFormatter.ISO_LOCAL_TIME))
                 }
 
-                locationInfo.text = activity.getString(R.string.text_location_info)
+                locationInfo.text = activity.getString(R.string.location_info)
                     .format(distanceText, visitedText)
 
                 locationDescription.text = safePlacePoint.place.description
@@ -170,7 +162,11 @@ class ArOverlayView constructor(private val activity: Activity) :
         PlaceListener.register(placeListener)
         RotationListener.register(rotationListener)
 
-        Place.fetchPlaces(activity)
+        val tagId = activity.intent.getStringExtra("com.threeal.smarttourism.TAG_ID")
+
+        tagId?.let {
+            Place.fetchPlaces(activity, it)
+        }
 
         if (parent != null) {
             val viewGroup = parent as ViewGroup
@@ -179,6 +175,12 @@ class ArOverlayView constructor(private val activity: Activity) :
         arFrameLayout.addView(this)
 
         setOnTouchListener(onTouchListener)
+    }
+
+    fun stop() {
+        LocationListener.unregister(locationListener)
+        PlaceListener.unregister(placeListener)
+        RotationListener.unregister(rotationListener)
     }
 
     override fun onDraw(canvas: Canvas?) {
