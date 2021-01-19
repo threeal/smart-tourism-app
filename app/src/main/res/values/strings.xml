@@ -5,4 +5,12 @@
     <string name="text_fetching_data">Mengambil data lokasi…</string>
     <string name="text_fetching_data_success">Berhasil mengambil data lokasi</string>
     <string name="text_fetching_data_failed">Gagal mengambil data lokasi</string>
+    <string name="text_distance_info_not_found">Jarak tidak diketahui</string>
+    <string name="text_distance_info_m">Jarak %d M</string>
+    <string name="text_distance_info_km">Jarak %d KM</string>
+    <string name="text_visitation_info_not_visited">Belum pernah dikunjungi</string>
+    <string name="text_visitation_info">Dikunjungi pada %s</string>
+    <string name="text_location_info">%s, %s</string>
+    <string name="text_camera_permission_not_granted">Ijin akses kamera tidak diberikan</string>
+    <string name="text_location_permission_not_granted">Ijin akses lokasi tidak diberikan</string>
 </resources>

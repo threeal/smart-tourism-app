@@ -1,7 +1,9 @@
 package com.threeal.smarttourism
 
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class ENUCoordinate private constructor(val ecef: ECEFCoordinate, private val data: DoubleArray) {
     companion object {

@@ -2,6 +2,7 @@ package com.threeal.smarttourism
 
 import android.location.Location
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -32,6 +33,14 @@ class ECEFCoordinate private constructor(val location: Location, private val dat
 
             return ECEFCoordinate(location, doubleArrayOf(x, y, z))
         }
+    }
+
+    fun distanceTo(other: ECEFCoordinate): Double {
+        val x2 = (other.x - x).pow(2)
+        val y2 = (other.y - y).pow(2)
+        val z2 = (other.z - z).pow(2)
+
+        return sqrt(x2 + y2 + z2)
     }
 
     val x: Double get() = data[0]

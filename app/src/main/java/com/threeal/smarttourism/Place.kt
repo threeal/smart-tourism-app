@@ -7,6 +7,7 @@ import com.android.volley.Request
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
+import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -35,7 +36,7 @@ class Place private constructor(
     val name: String,
     val type: Type,
     val description: String,
-    val timestamp: LocalDateTime,
+    val timestamp: LocalDateTime?,
     val location: Location
 ) {
     enum class Type {
@@ -51,8 +52,6 @@ class Place private constructor(
     }
 
     companion object {
-        private var places = listOf<Place>()
-
         fun fetchPlaces(context: Context) {
             val queue = Volley.newRequestQueue(context)
 
@@ -67,15 +66,14 @@ class Place private constructor(
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        val newPlaces = mutableListOf<Place>()
+                        val places = mutableListOf<Place>()
                         for (i in 0 until jsonArray.length()) {
                             val jsonObject = jsonArray[i] as JSONObject
 
-                            newPlaces.add(fromJSON(jsonObject))
+                            places.add(fromJSON(jsonObject))
                         }
 
-                        places = newPlaces.toList()
-                        PlaceListener.trigger(newPlaces)
+                        PlaceListener.trigger(places)
                     },
                     {
                         Toast.makeText(
@@ -89,8 +87,7 @@ class Place private constructor(
         }
 
         private fun fromJSON(jsonObject: JSONObject): Place {
-            return Place(
-                jsonObject.getString("id"),
+            return Place(jsonObject.getString("id"),
                 jsonObject.getString("name"),
                 when (jsonObject.getString("type")) {
                     "information" -> Type.Information
@@ -103,16 +100,19 @@ class Place private constructor(
                     else -> Type.Unknown
                 },
                 jsonObject.getString("description"),
-                LocalDateTime.parse(
-                    jsonObject.getString("timestamp"),
-                    DateTimeFormatter.ISO_DATE_TIME
-                ),
+                try {
+                    LocalDateTime.parse(
+                        jsonObject.getString("timestamp"),
+                        DateTimeFormatter.ISO_DATE_TIME
+                    )
+                } catch (e: Exception) {
+                    null
+                },
                 Location("Place").apply {
                     longitude = jsonObject.getDouble("longitude");
                     latitude = jsonObject.getDouble("latitude");
                     altitude = 0.0;
-                }
-            )
+                })
         }
     }
 }

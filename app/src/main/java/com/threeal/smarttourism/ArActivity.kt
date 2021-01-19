@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_ar)
 
         arOverlayView = ArOverlayView(this)
 
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                     cameraHandler?.start()
                 } else {
                     Toast.makeText(
-                        this, "Camera permissions not granted by the user.",
+                        this, getString(R.string.text_camera_permission_not_granted),
                         Toast.LENGTH_SHORT
                     ).show()
                     finish()
@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                     locationHandler?.start()
                 } else {
                     Toast.makeText(
-                        this, "Location permissions not granted by the user.",
+                        this, getString(R.string.text_location_permission_not_granted),
                         Toast.LENGTH_SHORT
                     ).show()
                     finish()

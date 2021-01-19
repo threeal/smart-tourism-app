@@ -1,5 +1,7 @@
 package com.threeal.smarttourism
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.graphics.Canvas
 import android.location.Location
@@ -7,14 +9,24 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.TextView
+import androidx.cardview.widget.CardView
+import androidx.core.text.parseAsHtml
+import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 
 class ArOverlayView constructor(private val activity: Activity) :
     View(activity) {
 
-    private val frameLayout: FrameLayout = activity.findViewById(R.id.arFrameLayout)
+    private val arFrameLayout: FrameLayout = activity.findViewById(R.id.arFrameLayout)
+    private val locationView: CardView = activity.findViewById(R.id.locationView)
+
+    private val locationTitle: TextView = activity.findViewById(R.id.locationTitle)
+    private val locationInfo: TextView = activity.findViewById(R.id.locationInfo)
+    private val locationDescription: TextView = activity.findViewById(R.id.locationDescription)
 
     private var projectionMatrix: ProjectionMatrix? = null
-    private var currentLocation: Location? = null
+    private var currentECEF: ECEFCoordinate? = null
 
     private var places = listOf<Place>()
     private var placeENUs = listOf<PlaceENU>()
@@ -24,7 +36,7 @@ class ArOverlayView constructor(private val activity: Activity) :
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
-            currentLocation = location
+            currentECEF = ECEFCoordinate.fromLocation(location)
             processPlaceENUs()
         }
     }
@@ -46,13 +58,33 @@ class ArOverlayView constructor(private val activity: Activity) :
         }
     }
 
-    private fun processPlaceENUs() {
-        currentLocation?.let { currentLocation ->
-            val currentECEF = ECEFCoordinate.fromLocation(currentLocation)
+    private val onTouchListener = OnTouchListener { _, event ->
+        event?.let { safeEvent ->
+            when (safeEvent.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    performClick()
 
+                    var placeId: String? = null
+                    placePoints.forEach {
+                        val selected = it.place.id == selectedPlaceId
+                        if (it.touching(safeEvent.x, safeEvent.y, selected)) {
+                            placeId = it.place.id
+                        }
+                    }
+
+                    selectPlace(placeId)
+                }
+            }
+        }
+
+        true
+    }
+
+    private fun processPlaceENUs() {
+        currentECEF?.let { safeCurrentEcef ->
             val newPlaceENUs = mutableListOf<PlaceENU>()
             places.forEach {
-                newPlaceENUs.add(PlaceENU.fromCurrentECEFToPlace(currentECEF, it))
+                newPlaceENUs.add(PlaceENU.fromCurrentECEFToPlace(safeCurrentEcef, it))
             }
 
             placeENUs = newPlaceENUs.toList()
@@ -61,15 +93,73 @@ class ArOverlayView constructor(private val activity: Activity) :
     }
 
     private fun processPlacePoints() {
-        projectionMatrix?.let { projectionMatrix ->
+        projectionMatrix?.let { safeProjectionMatrix ->
             val newPlacePoints = mutableListOf<PlacePoint>()
             placeENUs.forEach {
-                val placePoint = PlacePoint.fromProjectionOfPlaceEnu(projectionMatrix, it)
+                val placePoint = PlacePoint.fromProjectionOfPlaceEnu(safeProjectionMatrix, it)
                 newPlacePoints.add(placePoint)
             }
 
             placePoints = newPlacePoints
             invalidate()
+        }
+    }
+
+    private fun selectPlace(placeId: String?) {
+        selectedPlaceId = if (placeId != selectedPlaceId) placeId else null
+
+        if (selectedPlaceId == null) {
+            if (locationView.visibility != View.GONE) {
+                locationView.animate()
+                    .alpha(0f)
+                    .setDuration(100)
+                    .setListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator?) {
+                            locationView.visibility = View.GONE
+                        }
+                    })
+            }
+
+            return
+        }
+
+        selectedPlaceId?.let { safeSelectedPlaceId ->
+            val placePoint = placePoints.find { it.place.id == safeSelectedPlaceId }
+
+            placePoint?.let { safePlacePoint ->
+                locationTitle.text = safePlacePoint.place.name
+
+                var distanceText = activity.getString(R.string.text_distance_info_not_found)
+                currentECEF?.let {
+                    val distance = it.distanceTo(safePlacePoint.enu.ecef)
+                    distanceText = if (distance < 1000) {
+                        activity.getString(R.string.text_distance_info_m).format(distance.toInt())
+                    } else {
+                        activity.getString(R.string.text_distance_info_km)
+                            .format(distance.toInt() / 1000)
+                    }
+                }
+
+                var visitedText = activity.getString(R.string.text_visitation_info_not_visited)
+                safePlacePoint.place.timestamp?.let {
+                    visitedText = activity.getString(R.string.text_visitation_info)
+                        .format(it.format(DateTimeFormatter.ISO_LOCAL_TIME))
+                }
+
+                locationInfo.text = activity.getString(R.string.text_location_info)
+                    .format(distanceText, visitedText)
+
+                locationDescription.text = safePlacePoint.place.description
+
+                locationView.apply {
+                    if (visibility != View.VISIBLE) {
+                        visibility = View.VISIBLE
+                        alpha = 0f
+
+                        animate().alpha(1f).setDuration(100).setListener(null)
+                    }
+                }
+            }
         }
     }
 
@@ -84,35 +174,17 @@ class ArOverlayView constructor(private val activity: Activity) :
             val viewGroup = parent as ViewGroup
             viewGroup.removeView(this)
         }
-        frameLayout.addView(this)
-    }
+        arFrameLayout.addView(this)
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                performClick()
-                placePoints.forEach {
-                    if (it.touching(event.x, event.y, it.place.id == selectedPlaceId)) {
-                        selectedPlaceId = it.place.id
-                    }
-                }
-            }
-        }
-
-        return super.onTouchEvent(event)
-    }
-
-    override fun performClick(): Boolean {
-        selectedPlaceId = null
-        return super.performClick()
+        setOnTouchListener(onTouchListener)
     }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
-        canvas?.let {
-            placePoints.forEach { placePoint ->
-                placePoint.draw(context, it, placePoint.place.id == selectedPlaceId)
+        canvas?.let { safeCanvas ->
+            placePoints.forEach {
+                it.draw(context, safeCanvas, it.place.id == selectedPlaceId)
             }
         }
     }
