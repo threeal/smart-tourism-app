@@ -42,9 +42,11 @@ class ArOverlayView constructor(private val activity: Activity) :
     }
 
     private val placeListener = object : PlaceListener {
-        override fun onPlacesChanged(places: List<Place>) {
-            this@ArOverlayView.places = places
-            processPlaceENUs()
+        override fun onPlacesChanged(places: List<Place>?) {
+            places?.let { safePlaces ->
+                this@ArOverlayView.places = safePlaces
+                processPlaceENUs()
+            }
         }
     }
 
@@ -77,7 +79,7 @@ class ArOverlayView constructor(private val activity: Activity) :
             }
         }
 
-        true
+        false
     }
 
     private fun processPlaceENUs() {

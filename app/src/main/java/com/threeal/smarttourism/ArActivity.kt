@@ -8,10 +8,12 @@ import androidx.core.app.ActivityCompat
 
 class MainActivity : AppCompatActivity() {
 
+    private var arOverlayView: ArOverlayView? = null
+
     private var cameraHandler: CameraHandler? = null
     private var locationHandler: LocationHandler? = null
     private var rotationHandler: RotationHandler? = null
-    private var arOverlayView: ArOverlayView? = null
+    private var refreshHandler: RefreshHandler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         cameraHandler = CameraHandler(this)
         locationHandler = LocationHandler(this)
         rotationHandler = RotationHandler(this)
+        refreshHandler = RefreshHandler(this)
     }
 
     override fun onResume() {
@@ -32,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         cameraHandler?.start()
         locationHandler?.start()
         rotationHandler?.start()
+        refreshHandler?.start()
     }
 
     override fun onPause() {

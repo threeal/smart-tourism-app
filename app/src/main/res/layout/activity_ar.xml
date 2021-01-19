@@ -17,6 +17,18 @@
 
         </androidx.camera.view.PreviewView>
 
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </ListView>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
         <FrameLayout
             android:id="@+id/arFrameLayout"
             android:layout_width="match_parent"

@@ -21,14 +21,14 @@ interface PlaceListener {
             }
         }
 
-        fun trigger(places: List<Place>) {
+        fun trigger(places: List<Place>?) {
             placeListeners.forEach {
                 it.onPlacesChanged(places)
             }
         }
     }
 
-    fun onPlacesChanged(places: List<Place>)
+    fun onPlacesChanged(places: List<Place>?)
 }
 
 class Place private constructor(
@@ -81,6 +81,8 @@ class Place private constructor(
                             R.string.text_fetching_data_failed,
                             Toast.LENGTH_SHORT
                         ).show()
+
+                        PlaceListener.trigger(null)
                     })
 
             queue.add(placesRequest)
