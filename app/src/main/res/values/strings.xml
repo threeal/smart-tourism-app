@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">Smart Tourism</string>
+    <string name="app_name">Smart Tourism App</string>
+    <string name="intent_tag_id">com.threeal.smarttourism.TAG_ID</string>
     <string name="icon_back_description">Kembali</string>
     <string name="server_address">http://192.168.5.108:8080/api/app/location/%s</string>
     <string name="fetching_data">Mengambil data lokasi…</string>
@@ -15,6 +16,8 @@
     <string name="location_permission_not_granted">Ijin akses lokasi tidak diberikan</string>
     <string name="login">Masuk</string>
     <string name="login_trying">Mencoba masuk…</string>
-    <string name="tag_id_hint">Id kartu</string>
-    <string name="tag_id_invalid">Id kartu tidak valid</string>
+    <string name="tag_id_hint">ID kartu</string>
+    <string name="tag_id_invalid">ID kartu tidak valid</string>
+    <string name="detect_tag_id">ID kartu %s terdeteksi</string>
+    <string name="scanner_error">Kesalahan pemindai kartu</string>
 </resources>

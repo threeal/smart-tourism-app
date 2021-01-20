@@ -82,7 +82,8 @@ class ArActivity : AppCompatActivity() {
                     locationHandler?.start()
                 } else {
                     Toast.makeText(
-                        this, getString(R.string.location_permission_not_granted),
+                        this,
+                        getString(R.string.location_permission_not_granted),
                         Toast.LENGTH_SHORT
                     ).show()
                     finish()

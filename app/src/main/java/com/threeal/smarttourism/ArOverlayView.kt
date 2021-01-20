@@ -39,7 +39,7 @@ class ArOverlayView constructor(private val activity: Activity) :
 
     private val placeListener = PlaceListener { places ->
         places?.let { safePlaces ->
-            this@ArOverlayView.places = safePlaces
+            this.places = safePlaces
             processPlaceENUs()
         }
     }
@@ -162,7 +162,7 @@ class ArOverlayView constructor(private val activity: Activity) :
         PlaceListener.register(placeListener)
         RotationListener.register(rotationListener)
 
-        val tagId = activity.intent.getStringExtra("com.threeal.smarttourism.TAG_ID")
+        val tagId = activity.intent.getStringExtra(activity.getString(R.string.intent_tag_id))
 
         tagId?.let {
             Place.fetchPlaces(activity, it)

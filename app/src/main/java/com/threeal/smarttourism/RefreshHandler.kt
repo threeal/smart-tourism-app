@@ -7,7 +7,7 @@ class RefreshHandler constructor(private val activity: Activity) {
     private val swipeRefresh: SwipeRefreshLayout = activity.findViewById(R.id.swipeRefresh)
 
     private val swipeRefreshListener = SwipeRefreshLayout.OnRefreshListener {
-        val tagId = activity.intent.getStringExtra("com.threeal.smarttourism.TAG_ID")
+        val tagId = activity.intent.getStringExtra(activity.getString(R.string.intent_tag_id))
 
         tagId?.let {
             Place.fetchPlaces(activity, it)

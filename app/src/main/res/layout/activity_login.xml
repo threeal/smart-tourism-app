@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light"
-    tools:context=".LoginActivity"
-    tools:deviceIds="wear">
+    tools:context=".LoginActivity">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -29,6 +27,29 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <com.budiyev.android.codescanner.CodeScannerView
+                android:id="@+id/scannerView"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="40dp"
+                android:layout_marginBottom="40dp"
+                app:autoFocusButtonColor="@android:color/white"
+                app:autoFocusButtonVisible="true"
+                app:flashButtonColor="@android:color/white"
+                app:flashButtonVisible="true"
+                app:frameAspectRatioHeight="1"
+                app:frameAspectRatioWidth="1"
+                app:frameColor="@android:color/white"
+                app:frameCornersRadius="0dp"
+                app:frameCornersSize="50dp"
+                app:frameSize="0.75"
+                app:frameThickness="2dp"
+                app:layout_constraintBottom_toTopOf="@+id/tagIdEdit"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:maskColor="#77000000" />
 
             <EditText
                 android:id="@+id/tagIdEdit"
@@ -62,4 +83,4 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
-</androidx.wear.widget.BoxInsetLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -68,8 +68,8 @@ class LocationHandler constructor(private val activity: Activity) {
             )
         }
 
-        fusedLocationProvider.lastLocation.addOnSuccessListener {
-            it?.let {
+        fusedLocationProvider.lastLocation.addOnSuccessListener { location ->
+            location?.let {
                 LocationListener.trigger(it)
             }
         }
