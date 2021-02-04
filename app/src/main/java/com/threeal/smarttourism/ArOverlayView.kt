@@ -4,7 +4,6 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.graphics.Canvas
-import android.location.Location
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup

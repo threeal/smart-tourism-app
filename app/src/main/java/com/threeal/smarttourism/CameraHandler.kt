@@ -32,7 +32,7 @@ class CameraHandler constructor(private val activity: Activity) {
             )
         }
 
-        cameraProviderFuture.addListener(Runnable {
+        cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
             val preview = Preview.Builder()
